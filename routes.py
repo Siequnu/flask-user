@@ -85,12 +85,12 @@ def register():
 				if current_user.is_authenticated and app.models.is_admin(current_user.username):
 					# Send the email confirmation link, with link to set a password
 					recover_url = url_for('user.reset_with_token', token=token, _external=True)
-					html = render_template('email/set_password.html', recover_url=recover_url, username = form.username.data)
+					html = render_template('email/set_password.html', recover_url=recover_url, username = form.username.data, app_name = current_app.config['APP_NAME'])
 					flash('An email has been sent to the new user with further instructions.', 'success')
 				else:
 					# Send the email confirmation link
 					confirm_url = url_for('user.confirm_email', token=token, _external=True)
-					html = render_template('email/activate.html',confirm_url=confirm_url, username = form.username.data)
+					html = render_template('email/activate.html',confirm_url=confirm_url, username = form.username.data, app_name = current_app.config['APP_NAME'])
 					flash('An email has been sent to you with further instructions.', 'success')
 				executor.submit(app.email_model.send_email, user.email, subject, html)
 				return redirect(url_for('user.login'))
@@ -123,7 +123,7 @@ def send_new_confirmation_email(user_id):
 		token = app.email_model.ts.dumps(str(user.email), salt=current_app.config["TS_SALT"])
 		confirm_url = url_for('user.confirm_email', token=token, _external=True)
 		
-		html = render_template('email/activate.html',confirm_url=confirm_url, username = user.username)
+		html = render_template('email/activate.html',confirm_url=confirm_url, username = user.username, app_name = current_app.config['APP_NAME'])
 		executor.submit(app.email_model.send_email, user.email, subject, html)
 		flash('A new confirmation email has been sent to ' + user.username + ' with further instructions.', 'success')
 		return redirect(url_for('user.manage_students'))
@@ -152,7 +152,7 @@ def reset():
 		token = app.email_model.ts.dumps(user.email, salt=current_app.config["TS_RECOVER_SALT"])
 
 		recover_url = url_for('user.reset_with_token', token=token, _external=True)
-		html = render_template('email/recover.html', recover_url=recover_url, username = user.username)
+		html = render_template('email/recover.html', recover_url=recover_url, username = user.username, app_name = current_app.config['APP_NAME'])
 		
 		executor.submit(app.email_model.send_email, user.email, subject, html)
 		flash('An email has been sent to your inbox with a link to recover your password.', 'info')
@@ -318,7 +318,7 @@ def register_admin():
 			subject = current_app.config['APP_NAME'] + " - your account is almost ready"
 			token = app.email_model.ts.dumps(str(form.email.data), salt=current_app.config["TS_SALT"])
 			recover_url = url_for('user.reset_with_token', token=token, _external=True)
-			html = render_template('email/set_password.html', recover_url=recover_url, username = form.username.data)		
+			html = render_template('email/set_password.html', recover_url=recover_url, username = form.username.data, app_name = current_app.config['APP_NAME'])		
 			executor.submit(app.email_model.send_email, user.email, subject, html)
 			
 			flash('An email has been sent to the new user with further instructions.', 'success')
