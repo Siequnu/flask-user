@@ -80,7 +80,7 @@ def register():
 					app.assignments.models.enroll_user_in_class(user.id, turma_id)
 				db.session.commit()
 				
-				subject = "WorkUp - your account is almost ready"
+				subject = current_app.config['APP_NAME'] + " - your account is almost ready"
 				token = app.email_model.ts.dumps(str(form.email.data), salt=current_app.config["TS_SALT"])
 				if current_user.is_authenticated and app.models.is_admin(current_user.username):
 					# Send the email confirmation link, with link to set a password
@@ -119,7 +119,7 @@ def send_new_confirmation_email_to_all_unconfirmed_users():
 def send_new_confirmation_email(user_id):
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
 		user = User.query.filter_by(id=user_id).first_or_404()
-		subject = "WorkUp - please confirm your email address"
+		subject = current_app.config['APP_NAME'] + " - please confirm your email address"
 		token = app.email_model.ts.dumps(str(user.email), salt=current_app.config["TS_SALT"])
 		confirm_url = url_for('user.confirm_email', token=token, _external=True)
 		
@@ -315,7 +315,7 @@ def register_admin():
 			db.session.commit()
 			
 			# Send the email confirmation link, with link to set a password
-			subject = "WorkUp - your account is almost ready"
+			subject = current_app.config['APP_NAME'] + " - your account is almost ready"
 			token = app.email_model.ts.dumps(str(form.email.data), salt=current_app.config["TS_SALT"])
 			recover_url = url_for('user.reset_with_token', token=token, _external=True)
 			html = render_template('email/set_password.html', recover_url=recover_url, username = form.username.data)		
