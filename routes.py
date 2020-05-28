@@ -55,6 +55,56 @@ def logout():
 def troubleshooting():
 	return render_template('user/troubleshooting.html', title='Having problems logging in?')
 
+# Display a user profile
+@bp.route('/profile/<user_id>')
+def user_profile(user_id):
+	try:
+		user = User.query.get(int(user_id))
+	except:
+		abort (404)
+	
+	# Is user an admin (do not show student profiles)
+	if user is not None and app.models.is_admin(user.username):
+		# Display their profile
+		return render_template('user/user_profile.html', title='User profile', user = user)
+	else:
+		abort (404)
+
+# Edit a user profile
+@bp.route('/profile/edit', methods=['GET', 'POST'])
+def profile_edit ():
+	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+		user = User.query.get(current_user.id)
+		form = app.user.forms.EditUserProfileForm(obj=user)
+		if form.validate_on_submit():
+			user.profile_name = form.profile_name.data
+			user.profile_title = form.profile_title.data
+			user.profile_education = form.profile_education.data
+			user.profile_qualification = form.profile_qualification.data
+			user.profile_text = form.profile_text.data
+			
+			db.session.commit()
+			flash('User profile edited successfully.', 'success')
+			return redirect(url_for('user.user_profile', user_id = user.id))
+		return render_template('user/profile_edit.html', title='Edit user profile', form=form)
+	else:
+		abort (403)
+	
+# Edit a user profile
+@bp.route('/profile/photo/edit', methods=['GET', 'POST'])
+def photo_edit ():
+	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+		user = User.query.get(current_user.id)
+		form = app.user.forms.EditUserProfilePicture(obj=user)
+		if form.validate_on_submit():
+			app.user.models.new_profile_picture_upload_from_form (form, user)
+			flash('User profile edited successfully.', 'success')
+			return redirect(url_for('user.user_profile', user_id = user.id))
+		return render_template('user/profile_edit.html', title='Edit user profile', form=form)
+	else:
+		abort (403)
+
+
 # Registration
 @bp.route('/register', methods=['GET', 'POST'])
 def register():
