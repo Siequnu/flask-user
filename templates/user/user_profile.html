@@ -1,0 +1,40 @@
+{% extends "header.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+
+{% block app_content %}
+{% block body %}
+
+<br>
+<div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <a href="{{url_for('main.index')}}" <button class="btn btn-light"><i class="fa fa-chevron-left"></i> Back</button></a>
+            </div>
+            <div class="col-md-10">
+
+                <h1><i class="fa fa-user-graduate"></i> {{user.profile_name}}</h1>
+
+            </div>
+        </div>
+<hr>
+<div class="row">
+    <div class="col-xs-12 col-md-4">
+        {% if user.profile_picture != None %}
+        {% set thumbnail_filename = user.profile_picture.split('.') %}
+        <img src="/static/thumbnails/{{thumbnail_filename[0]}}.jpeg" width="300px" />
+        <p><a href="{{url_for('user.photo_edit')}}" <button class="btn btn-light"><i class="fa fa-portrait"></i> Edit photo</button></a></p>
+        {% else %}
+        <a href="{{url_for('user.photo_edit')}}" <button class="btn btn-light"><i class="fa fa-portrait"></i> Add photo</button></a>
+        {% endif %}
+    </div>
+    <div class="col-xs-12 col-md-4">
+        <h4>{{user.profile_title}}</h2>
+        <h4>{{user.profile_education}}</h4>
+        <h4>{{user.profile_qualification}}</h4>
+        <p>{{user.profile_text}}</p>
+        </div>
+ </div>
+   
+</div> 
+{% endblock %}
+{% endblock %}

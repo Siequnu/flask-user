@@ -1,0 +1,38 @@
+{% extends "header.html" %}
+{% from 'bootstrap/form.html' import render_form %}
+
+{% block app_content %}
+{% block body %}
+
+<br>
+<div class="container">
+        <div class="row">
+            <div class="col-md-2">
+                <a href="{{url_for('main.index')}}" <button class="btn btn-light"><i class="fa fa-chevron-left"></i> Back</button></a>
+            </div>
+            <div class="col-md-10">
+
+                <h1><i class="fa fa-user-graduate"></i> {{student.username}}'s mentors</h1>
+
+            </div>
+        </div>
+<hr>
+ 
+ <h3>{{student.username}} currently has {{mentors|length}} mentors.</h3>
+ 
+<a href="{{url_for('user.search_for_mentors', student_id = student.id)}}" <button class="btn btn-secondary"><i class="fa fa-user-plus"></i> Add mentor</button></a> 
+{% for mentor in mentors %}
+<br /><br />
+
+ <div class="card" style="max-width:25rem;">
+      <div class="card-body">
+     <h5 class="card-title">{{mentor.profile_name}}</h5>
+     <a href="{{url_for('user.user_profile', user_id = mentor.id)}}" class="btn btn-primary">View profile</a>
+    <a href="#" class="btn btn-outline-danger float-right">Remove as mentor</a>
+   </div>
+</div>
+{% endfor %}
+   
+</div> 
+{% endblock %}
+{% endblock %}

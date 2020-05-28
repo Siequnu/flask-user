@@ -5,6 +5,7 @@ from flask_login import current_user, login_user, login_required, logout_user
 from werkzeug.urls import url_parse
 
 from app.models import User, Turma
+from .models import MentoringRelationship
 from app import db
 
 import app.email_model
@@ -104,6 +105,44 @@ def photo_edit ():
 	else:
 		abort (403)
 
+# View a student's mentors
+@bp.route('/mentors/<student_id>')
+def view_mentors (student_id):
+	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+		student = User.query.get(student_id)
+		mentor_relationships = MentoringRelationship.query.filter_by(student_id = student_id).all()
+		mentors = []
+		for teaching_connection in mentor_relationships:
+			mentors.append (User.query.get(teaching_connection.mentor_id))
+		return render_template('user/view_mentors.html', student = student, mentors = mentors)
+	abort (403)
+
+# View a student's mentors
+@bp.route('/mentors/search/<student_id>')
+def search_for_mentors (student_id):
+	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+		student = User.query.get (student_id)
+		if student is None:
+			abort (403)
+		mentors = User.query.filter_by (is_admin = True).all()
+		return render_template('user/add_mentor.html', student = student, mentors = mentors)
+	abort (403)
+	
+# View a student's mentors
+@bp.route('/mentors/add/<student_id>/<mentor_id>')
+def add_mentor (student_id, mentor_id):
+	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+		student = User.query.get (student_id)
+		mentor = User.query.get (mentor_id)
+		if student is None or mentor is None:
+			abort (403)
+			
+		mentor_relationship = MentoringRelationship (student_id = student.id, mentor_id = mentor.id)
+		db.session.add(mentor_relationship)
+		db.session.commit()
+		flash('Mentor added successfully.', 'success')
+		return redirect(url_for('user.view_mentors', student_id = student.id))
+	abort (403)
 
 # Registration
 @bp.route('/register', methods=['GET', 'POST'])

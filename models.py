@@ -11,6 +11,15 @@ from sqlalchemy import func
 
 from app import executor
 
+class MentoringRelationship(db.Model):
+	__table_args__ = {'sqlite_autoincrement': True}
+	id = db.Column(db.Integer, primary_key=True)
+	student_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+	mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+	
+	def __repr__(self):
+		return '<Mentoring relationship {}>'.format(self.id)	
+
 def new_profile_picture_upload_from_form (form, user):
 	file = form.profile_picture.data
 	filename = app.files.models.save_file(file)
