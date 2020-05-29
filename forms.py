@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, DateField, RadioField, FormField, TextAreaField, SelectMultipleField
-from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
+from wtforms.validators import ValidationError, DataRequired, Email, EqualTo, Optional, Length
 from flask_wtf.file import FileField, FileRequired
 from app.models import User, Turma
 
@@ -76,3 +76,15 @@ class AdminRegistrationForm(FlaskForm):
 		user = User.query.filter_by(email=email.data).first()
 		if user is not None:
 			raise ValidationError('Please use a different email address.')
+		
+class EditUserProfileForm (FlaskForm):
+	profile_name = StringField('Your full name:', validators=[Optional(), Length(max = 200)])
+	profile_title = StringField('Profile Title:', validators=[Optional(), Length(max = 200)])
+	profile_education = StringField('Profile education:', validators=[Optional(), Length(max = 200)])
+	profile_qualification = StringField('Profile qualification:', validators=[Optional(), Length(max = 200)])
+	profile_text = StringField('Profile text:', validators=[Optional(), Length(max = 2000)])
+	submit = SubmitField('Update your profile')
+	
+class EditUserProfilePicture(FlaskForm):
+	profile_picture = FileField(label='Your profile picture:', validators=[DataRequired()])
+	submit = SubmitField('Upload this picture')

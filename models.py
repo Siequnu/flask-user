@@ -1,5 +1,6 @@
 from app import db
 import app.models, app.email_model
+import app.files.models
 from app.models import Upload, Download, Assignment, User, Comment, Enrollment, Turma
 from flask_login import current_user
 import string, time, xlrd
@@ -7,6 +8,16 @@ from flask import url_for, render_template, redirect, session, flash, request, a
 from datetime import datetime, timedelta
 
 from sqlalchemy import func
+
+from app import executor
+
+def new_profile_picture_upload_from_form (form, user):
+	file = form.profile_picture.data
+	filename = app.files.models.save_file(file)
+	user.profile_picture = filename
+	db.session.commit()
+	# Generate thumbnail
+	executor.submit(app.files.models.get_thumbnail, user.profile_picture)
 
 def get_total_user_count ():
 	# Remove admins?

@@ -111,11 +111,9 @@
                </td>
               {% endif %}
 
-              {% if user.is_admin==True %}
-               <td><a href="{{url_for('user.remove_admin_rights', user_id = user.id)}}" class="btn btn-outline-danger btn-sm" role="button"><i class="fa fa-user-slash"></i> Make student</a></td>
-              {% else %}
-               <td><a href="{{url_for('user.give_admin_rights', user_id = user.id)}}" class="btn btn-outline-warning btn-sm" role="button"><i class="fa fa-user-tie"></i> Make teacher</a></td>
-              {% endif %}       
+              
+               <td><a href="{{url_for('mentors.view_mentors', student_id = user.id)}}" class="btn btn-outline-primary btn-sm" role="button"><i class="fa fa-chalkboard-teacher"></i> View mentors</a></td>
+
               <td>
                
                <div class="dropdown show">
@@ -125,13 +123,15 @@
 
   <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
     <a href="{{url_for('classes.view_attendance_record', user_id = user.id)}}" class="dropdown-item"><i class="fa fa-fw fa-calendar-alt"></i> Attendance</a>
+     {% if user.is_admin==True %}
+      <a href="{{url_for('user.remove_admin_rights', user_id = user.id)}}" class="dropdown-item"><i class="fa fa-user-slash"></i> Make student</a>
+      {% else %}
+      <a href="{{url_for('user.give_admin_rights', user_id = user.id)}}" class="dropdown-item"><i class="fa fa-user-tie"></i> Make teacher</a>
+       {% endif %}   
     <a href="{{url_for('user.edit_user', user_id = user.id)}}" class="dropdown-item"><i class="fa fa-fw fa-user-edit"></i> Edit</a>           
      <a href="{{url_for('user.delete_user', user_id = user.id)}}" class="dropdown-item"><i class="fa fa-fw fa-user-times"></i> Delete</a>           
   </div>
 </div>
-               
-               
-               
               
               </td>
             </tr>
