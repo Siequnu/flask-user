@@ -13,7 +13,10 @@
     <hr>
     <br>
     <form method="post">
-    {{ render_form(form) }}
+      <form method="post">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        {{ render_form(form) }}
+      </form>
      </form>
       <br>
   </div>
