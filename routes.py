@@ -106,41 +106,74 @@ def photo_edit ():
 
 # Registration
 @bp.route('/register', methods=['GET', 'POST'])
-def register():
+@bp.route('/register/<int:turma_id>', methods=['GET', 'POST'])
+def register(turma_id = False):
+	# If the user is authenticated, and not an admin (admin can use this form to register a student), redirect to index
 	if current_user.is_authenticated and app.models.is_admin(current_user.username) is not True:
 		return redirect(url_for('main.index'))
+
+	# If we are passing in a target class number, exit if this class does not exist
+	if turma_id:
+		turma = Turma.query.get (turma_id)
+		if turma is None:
+			flash ('Could not find this class. Please ask your tutor to help you with your registration', 'warning')
+			return redirect(url_for('main.index'))
+	
+	# If registration is open or we are an admin, create a new form
 	if current_app.config['REGISTRATION_IS_OPEN'] == True or current_user.is_authenticated and app.models.is_admin(current_user.username):
 		form = app.user.forms.RegistrationForm()
 		
+		# If we are an admin (i.e., creating an account for the student) remove the form.password and sign up code fields
 		if current_user.is_authenticated and app.models.is_admin(current_user.username):
 			del form.password
 			del form.signUpCode
 			
-		form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
+		# Get the possible class choices
+		if turma_id:
+			form.target_turmas.choices = [(turma.id, turma.turma_label)]
+		else:
+			form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
+		
+		# On submission
 		if form.validate_on_submit():
+			# If the sign up code is correct, or we are admin
 			if form.signUpCode and form.signUpCode.data in current_app.config['SIGNUP_CODES'] or current_user.is_authenticated and app.models.is_admin(current_user.username):
+				
+				# Create a new user
 				user = User(username=form.username.data, email=form.email.data, student_number=form.student_number.data, registered = datetime.now())
+				
+				# If we are not an admin, set the user's password (this field does not exist in the admin form)
 				if current_user.is_authenticated is not True:
 					user.set_password(form.password.data)
-					
+
+				# ADd the user and flush					
 				db.session.add(user)
 				db.session.flush() # Access the new user.id field in the next step
+				
+				# Enroll the student in the classes
 				for turma_id in form.target_turmas.data:
 					app.assignments.models.enroll_user_in_class(user.id, turma_id)
 				db.session.commit()
 				
+				# Build an email with a sign-up completion link
 				subject = current_app.config['APP_NAME'] + " - your account is almost ready"
 				token = app.email_model.ts.dumps(str(form.email.data), salt=current_app.config["TS_SALT"])
+				
+				# If we are an admin, send essentially a password reset email, but with a welcome message
 				if current_user.is_authenticated and app.models.is_admin(current_user.username):
 					# Send the email confirmation link, with link to set a password
 					recover_url = url_for('user.reset_with_token', token=token, _external=True)
 					html = render_template('email/set_password.html', recover_url=recover_url, username = form.username.data, app_name = current_app.config['APP_NAME'])
 					flash('An email has been sent to the new user with further instructions.', 'success')
+				
+				# Otherwise, send a normal email confirmation link
 				else:
 					# Send the email confirmation link
 					confirm_url = url_for('user.confirm_email', token=token, _external=True)
 					html = render_template('email/activate.html',confirm_url=confirm_url, username = form.username.data, app_name = current_app.config['APP_NAME'])
 					flash('An email has been sent to you with further instructions.', 'success')
+				
+				# Send email in background
 				executor.submit(app.email_model.send_email, user.email, subject, html)
 				return redirect(url_for('user.login'))
 			else:
@@ -151,7 +184,7 @@ def register():
 		flash('Sign up is currently closed.', 'warning')
 		return redirect(url_for('main.index'))
 
-# Send new confirmation email
+# Send new confirmation email to all unconfirmed users (bulk)
 @bp.route('/confirmation/bulk')
 def send_new_confirmation_email_to_all_unconfirmed_users():
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
