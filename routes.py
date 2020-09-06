@@ -146,7 +146,7 @@ def register(turma_id = False):
 				if current_user.is_authenticated is not True:
 					user.set_password(form.password.data)
 
-				# ADd the user and flush					
+				# Add the user and flush					
 				db.session.add(user)
 				db.session.flush() # Access the new user.id field in the next step
 				
@@ -419,7 +419,7 @@ def register_admin():
 		abort(403)
 
 # Admin page to batch import and create users from an xls file
-@bp.route("/batch_import_students", methods=['GET', 'POST'])
+@bp.route("/import", methods=['GET', 'POST'])
 @login_required
 def batch_import_students():
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
@@ -427,32 +427,43 @@ def batch_import_students():
 		form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
 		if form.validate_on_submit():
 			if not form.excel_file.data.filename:
-				flash('No file uploaded. Please try again or contact your tutor.', 'warning')
+				flash('No file uploaded.', 'warning')
 				return redirect(request.url)
 			file = form.excel_file.data
 			if file and models.check_if_excel_spreadsheet(file.filename):
 				session['student_info_array'] = models.process_student_excel_spreadsheet (file)
-				return redirect(url_for('user.batch_import_students_preview', turma_id = form.target_course.data))
+				session['target_turma_ids'] = form.target_turmas.data
+				return redirect(url_for('user.batch_import_students_preview', turma_id = form.target_turmas.data))
 			else:
-				flash('You can not upload this kind of file. You must upload an Excel (.xls) file.', 'warning')
+				flash('You can not upload this kind of file. You must upload an Excel (.xls or .xlsx) file.', 'warning')
 				return redirect(url_for('user.batch_import_students'))
 		return render_template('user/batch_import_students.html', title='Batch import students', form=form)
 	abort(403)
 
 # Admin page to preview batch import
-@bp.route("/batch_import_students_preview/<turma_id>")
+@bp.route("/import/preview")
 @login_required
-def batch_import_students_preview(turma_id):
+def batch_import_students_preview():
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
-		return render_template('user/batch_import_students_preview.html', turma_id = turma_id, student_info_array = session.get('student_info_array', {}), title='Batch import students preview')
+		return render_template(
+			'user/batch_import_students_preview.html', 
+			target_turma_ids = session.get('target_turma_ids', {}), 
+			student_info_array = session.get('student_info_array', {}), 
+			title='Batch import students preview')
 	abort(403)
 
 # Admin page to display after the import process
-@bp.route("/batch_import_students_process/<turma_id>")
+@bp.route("/import/process")
 @login_required
-def batch_import_students_process(turma_id):
+def batch_import_students_process():
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
 		student_info_array = session.get('student_info_array', {})
-		models.add_users_from_excel_spreadsheet(student_info_array, turma_id)
-		return render_template('user/batch_import_students_process.html', student_info_array = session.get('student_info_array', {}), title='Batch import students process')
+		target_turma_ids = session.get('target_turma_ids', {}), 
+		if student_info_array == {} or target_turma_ids == {}:
+			flash ('Could not locate the necessary student information','error')
+			return redirect(url_for('user.batch_import_students'))
+		
+		models.add_users_from_excel_spreadsheet(student_info_array, target_turma_ids)
+		flash ('Successfully added ' + str(len(student_info_array)) + ' students.', 'success')
+		return redirect (url_for ('user.manage_students'))
 	abort(403)

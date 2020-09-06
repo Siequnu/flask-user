@@ -3,25 +3,31 @@
 
 {% block app_content %}
 <div class="container">
-<br>
+  <br>
 
 
-{% block body %}
+  {% block body %}
 
- <div class="container">
+  <div class="container">
 
- <div class="card bg-light mb-3" style="max-width: 25rem;">
-  <div class="card-body">
-    <h1>Batch import students</h1>
-    <hr>
-    <br>
-    <form method="post">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      {{ render_form(form) }}
-    </form>
+    <div class="card bg-light mb-3" style="max-width: 25rem;">
+      <div class="card-body">
+        <h1>Batch import students</h1>
+        <hr>
+        <ul>
+          <li>To batch import students, choose the class (or classes) you would like to add these students to.</li>
+          <li>The Excel file should contain the columns name, student number, and email as the first three columns.</li>
+          <li>The data to import should be contained in the first sheet of the workbook, and begin on the second row, i.e., after the header row containing the column titles.</li>
+        </ul>
+        
+        <br>
+        <form method="post" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+          {{ render_form(form) }}
+        </form>
+      </div>
+    </div>
   </div>
-  </div>
-</div>
 </div>
 {% endblock %}
 </div>

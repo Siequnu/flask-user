@@ -6,7 +6,7 @@ from flask_login import current_user
 import string, time, xlrd
 from flask import url_for, render_template, redirect, session, flash, request, abort, current_app
 from datetime import datetime, timedelta
-
+from time import sleep
 from sqlalchemy import func
 
 from app import executor
@@ -56,41 +56,73 @@ def get_all_admin_info():
 	
 
 def process_student_excel_spreadsheet (excel_data_file):
-	# Get a list of names, student numbers, and email addresses
-	excel_workbook = xlrd.open_workbook(file_contents=excel_data_file.read())
-	student_info_sheet = excel_workbook.sheet_by_index(0)
-	student_info_dict = []
-	for row in range(1, student_info_sheet.nrows):    # Iterate through rows, start at 1 to avoid the header row
-		student = {}
-		student['name'] =  student_info_sheet.cell(row,1).value
-		student['student_number'] =  student_info_sheet.cell(row,0).value
-		student['email'] =  student_info_sheet.cell(row,7).value
-		student['department'] =  student_info_sheet.cell(row,3).value
-		student['section'] =  student_info_sheet.cell(row,4).value
-		student['phone_number'] =  student_info_sheet.cell(row,5).value
-		student_info_dict.append(student)
-	return student_info_dict
+	# Open the workbook
+	wb = xlrd.open_workbook(file_contents=excel_data_file.read())
+	sheet = wb.sheet_by_index(0) 
+	sheet.cell_value(0, 0) 
+
+	# Get number of rows
+	number_of_rows = sheet.nrows
+	number_of_emails = number_of_rows - 1
+
+	# Iterate through the file
+	i = 1 # Start counter at 1 to skip header row
+	student_data = []
+	while i < number_of_rows:
+		# Go to row
+		row = sheet.row_values(i)
+		
+		# Get details
+		student = {
+			'name': str(row[0]),
+			# Student number gets read as a float (123123123.0) so remove the trailing .0
+			'number': str(row[1]).replace('.0', ''),
+			'email': str (row[2])
+		}
+		
+		student_data.append (student)
+
+		# Increment counter
+		i = i + 1
+	
+	return student_data
 	
 
-def add_users_from_excel_spreadsheet (user_array, turma_id):
-	for student in user_array:
-		user = User(username=student['name'], email=student['email'], student_number=student['student_number'], turma_id=turma_id)
-		user.set_password(generate_word_password())
-		db.session.add(user)
-		db.session.commit()
-		'''
-		# Email student email with password and asking to confirm email.
-		subject = "workUp: confirm your email"
-		token = app.email_model.ts.dumps(str(form.email.data), salt=current_app.config["TS_SALT"])
-		confirm_url = url_for('user.confirm_email', token=token, _external=True)
-		html = render_template('email/activate.html',confirm_url=confirm_url)
-		app.email_model.send_email (user.email, subject, html)
-		'''
-	return True
+def add_users_from_excel_spreadsheet (student_info_array, target_turma_ids):
+	for student in student_info_array:
+		user = User(
+			username=student['name'], 
+			email=student['email'], 
+			student_number=student['number'], 
+			registered = datetime.now())
 		
-	
+		db.session.add(user)
+		db.session.flush() # Access the new user.id field in the next step
+
+		# Enroll the student in the classes
+		for turma_id in target_turma_ids:
+			app.assignments.models.enroll_user_in_class(user.id, turma_id)
+		db.session.commit()
+
+		# Build an email with a sign-up completion link
+		subject = current_app.config['APP_NAME'] + " - your account is almost ready"
+		token = app.email_model.ts.dumps(str(user.email), salt=current_app.config["TS_SALT"])
+				
+		# Send the email confirmation link, with link to set a password
+		recover_url = url_for('user.reset_with_token', token=token, _external=True)
+		html = render_template('email/set_password.html', recover_url=recover_url, username = user.username, app_name = current_app.config['APP_NAME'])
+
+		# Send email in background
+		executor.submit(app.email_model.send_email, user.email, subject, html)
+
+		# Prevent overloading the email sender
+		sleep (1)
+
+	return
+		
+# Returns a boolean True if a file is .xls or .xlsx
 def check_if_excel_spreadsheet (filename):
-	 return '.' in filename and filename.rsplit('.', 1)[1].lower() in ['xls']
+	 return '.' in filename and filename.rsplit('.', 1)[1].lower() in ['xls'] or '.' in filename and filename.rsplit('.', 1)[1].lower() in ['xlsx']
 	
 ############ Password generator
 def roll_dice (number_of_dice = 5):
