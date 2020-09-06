@@ -14,11 +14,28 @@
    <div class="col-md-8">
     <h1><i class="fa fa-chalkboard-teacher"></i> {{title}}</h1>
     <hr>
-    <a href="{{url_for('user.register_admin')}}" <button class="btn btn-primary"><i class="fa fa-plus-circle"></i> Create new teacher</button></a>
+    <a href="{{url_for('user.register_admin')}}" <button class="btn btn-outline-success"><i class="fa fa-plus-circle"></i> Create new teacher</button></a>
     <br>
     <br>
-   <input id="myInput" type="text" placeholder="Search..">
-   <br><br>
+    <link rel="stylesheet" href="/static/css/form-control-borderless.css">
+    <div class="row justify-content-left">
+       <div class="col-12 col-md-10 col-lg-8">
+           <form class="card">
+               <div class="card-body row no-gutters align-items-center">
+                   <div class="col-auto">
+                       <i class="fas fa-search h4 text-body">
+     </i>
+                   </div>
+                   <!--end of col-->
+                   <div class="col">
+                       <input id="myInput" class="form-control form-control-lg form-control-borderless" type="search" placeholder="Search for teachers">
+                   </div>
+                   <!--end of col-->
+               </div>
+           </form>
+       </div>
+       <!--end of col-->
+   </div>
   </div>
   </div>
       
