@@ -7,6 +7,7 @@ import string, time, xlrd
 from flask import url_for, render_template, redirect, session, flash, request, abort, current_app
 from datetime import datetime, timedelta
 from time import sleep
+import random
 from sqlalchemy import func
 
 from app import executor
