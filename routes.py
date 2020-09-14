@@ -132,7 +132,10 @@ def register(turma_id = False):
 		if turma_id:
 			form.target_turmas.choices = [(turma.id, turma.turma_label)]
 		else:
-			form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
+			if current_user.is_superintendant:
+				form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
+			else:
+				form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in app.classes.models.get_teacher_classes_from_teacher_id (current_user.id)]
 		
 		# On submission
 		if form.validate_on_submit():
