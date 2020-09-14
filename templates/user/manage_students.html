@@ -50,7 +50,7 @@
     </div>
 
     <br>
-    <h3>Enrolled users</h3>
+    <h3>Students in your classes</h3>
     <br>
     <div class="table-responsive">
       <table id="dtBasicExample" summary="User table"
@@ -127,6 +127,8 @@
       </table>
     </div>
     <!--end of .table-responsive-->
+
+    {% if current_user.is_superintendant %}
     <h3>Non enrolled users</h3>
     <div class="table-responsive">
       <table summary="All User table" class="table table-bordered table-hover">
@@ -186,6 +188,7 @@
       </table>
     </div>
     <!--end of .table-responsive-->
+    {% endif %}
 
   </div>
 </div>

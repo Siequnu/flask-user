@@ -24,12 +24,28 @@ def get_total_user_count ():
 	# Remove admins?
 	return len(User.query.all())
 
+# Function to return an array with (userObject, enrollmentString) for all students
+# Enrollment string is a comma seperated string containing the labels of the classes the student is enrolled in
+# If the current_user.id is not superintendant, only students from this teacher's classes will be returned
 def get_all_student_info ():
-	return db.session.query(User, func.group_concat(
+	student_info = db.session.query(User, func.group_concat(
 		Turma.turma_label, ", ")).join(
 		Enrollment, User.id == Enrollment.user_id).join(
 		Turma, Enrollment.turma_id == Turma.id).group_by(
 		User.student_number).all()
+
+	if current_user.is_superintendant is False:
+		teacher_turmas = []
+		for turma in app.classes.models.get_teacher_classes_from_teacher_id (current_user.id):
+			teacher_turmas.append (turma.id)
+		filtered_student_info = []
+		for user, ignored_enrollment_info in student_info:
+			for enrollment in Enrollment.query.filter_by (user_id = user.id).all():
+				if enrollment.turma_id in teacher_turmas:
+					filtered_student_info.append((user, ignored_enrollment_info))
+		student_info = filtered_student_info
+
+	return student_info
 
 def get_active_user_count ():
 	now = datetime.now()
