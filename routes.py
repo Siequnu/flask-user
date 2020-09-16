@@ -400,6 +400,41 @@ def remove_admin_rights(user_id):
 		abort(403)
 
 
+# Convert normal user into admin
+@bp.route('/superintendant/add/<user_id>')
+@login_required
+def make_superintendant(user_id):
+	if current_user.is_authenticated and current_user.is_superintendant:
+		try:
+			user = User.query.get (user_id)
+			if user is None:
+				flash('Could not find the user you requested.', 'error')
+				return redirect(url_for('user.manage_teachers'))
+
+			# Make DB call to convert user into admin
+			app.models.User.give_superintendant_rights(user_id)
+			flash(user.username + ' successfully made into superintendant.', 'success')
+		except:
+			flash('An error occured when changing ' + user.username + ' to a superintendant.', 'error')
+		return redirect(url_for('user.manage_teachers'))
+	else:
+		abort(403)
+		
+# Remove admin rights from user
+@bp.route('/superintendant/remove/<user_id>')
+@login_required
+def strip_of_superintendant(user_id):
+	if current_user.is_authenticated and current_user.is_superintendant:
+		try:	
+			app.models.User.remove_superintendant_rights(user_id)
+			flash('Superintendant rights removed from the user.', 'success')
+		except:
+			flash('An error occured when removing superintendant roles from the user.', 'error')
+		return redirect(url_for('user.manage_teachers'))
+	else:
+		abort(403)
+
+
 # Admin can register a new user
 @bp.route('/register/admin', methods=['GET', 'POST'])
 @login_required
