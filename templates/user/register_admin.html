@@ -2,30 +2,34 @@
 {% from 'bootstrap/form.html' import render_form %}
 
 {% block app_content %}
-<div class="container">
-<br>
 
+<!-- Alternative Bootstrap theme -->
+<link rel="stylesheet" href="/static/bootstrap/mdb.lite.min.css" type="text/css">
+<script src="/static/bootstrap/mdb.min.js"></script>
 
 {% block body %}
 
- <div class="container">
-
- <div class="card bg-light mb-3" style="max-width: 35rem;">
-  <div class="card-body">
-    <h1>Register new teacher</h1>
-    <br><a href="{{url_for('main.index')}}"><button class="btn btn-primary"><i class="fa fa-chevron-left"></i> Back</button></a>
-    <br><br>
-    <p>You can register a new teacher or TA using this form. You must choose at least one class that this teacher will manage.</p>
-    <p>If you haven't yet created the classes that this teacher should manage, then you can create them first by <a href="{{url_for('classes.create_class')}}"> clicking here.</a></p>
-    <hr>
-    <form method="post">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      {{ render_form(form) }}
-    </form>
-  </div>
-  </div>
+<div class="container mb-3">
+  <br><a href="{{url_for('main.superintendant')}}"><button class="btn btn-primary"><i class="fa fa-chevron-left"></i>
+      Back</button></a>
 </div>
+
+<div class="container">
+  <div class="card" style="max-width: 35rem;">
+    <div class="card-body">
+      <h1>Register new teacher</h1>
+      <br>
+      <p>You can register a new teacher or TA using this form. You must choose at least one class that this teacher
+        will manage.</p>
+      <p>If you haven't yet created the classes that this teacher should manage, then you can create them first by <a
+          href="{{url_for('classes.create_class')}}"> clicking here.</a></p>
+      <hr>
+      <form method="post">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        {{ render_form(form) }}
+      </form>
+    </div>
+  </div>
 </div>
 {% endblock %}
-</div>
 {% endblock %}

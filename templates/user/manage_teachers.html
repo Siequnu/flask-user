@@ -2,91 +2,107 @@
 {% from 'bootstrap/form.html' import render_form %}
 
 {% block app_content %}
+
+<!-- Alternative Bootstrap theme -->
+<link rel="stylesheet" href="/static/bootstrap/mdb.lite.min.css" type="text/css">
+<script src="/static/bootstrap/mdb.min.js"></script>
+
 <div class="container">
-<br>
+  <br>
 
 
-{% block body %}
+  {% block body %}
 
- <div class="container">
+  <div class="container">
 
- <div class="row">
-   <div class="col-md-8">
-    <h1><i class="fa fa-chalkboard-teacher"></i> {{title}}</h1>
-    <hr>
-    <a href="{{url_for('user.register_admin')}}" <button class="btn btn-outline-success"><i class="fa fa-plus-circle"></i> Create new teacher</button></a>
+    <div class="row">
+      <div class="col">
+        <h1><i class="fa fa-chalkboard-teacher"></i> {{title}}</h1>
+        <hr>
+        <a href="{{url_for('user.register_admin')}}"><button class="btn btn-outline-success"><i
+            class="fa fa-plus-circle"></i> Create new teacher</button></a>
+        <br>
+        <hr>
+        <link rel="stylesheet" href="/static/css/form-control-borderless.css">
+        <div class="row justify-content-left">
+          <div class="col-12 col-md-10 col-lg-8">
+            <form class="card">
+              <div class="card-body row no-gutters align-items-center">
+                <div class="col-auto">
+                  <i class="fas fa-search h4 text-body">
+                  </i>
+                </div>
+                <div class="col">
+                  <input id="myInput" class="form-control form-control-lg form-control-borderless" type="search"
+                    placeholder="Search for teachers">
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
     <br>
-    <br>
-    <link rel="stylesheet" href="/static/css/form-control-borderless.css">
-    <div class="row justify-content-left">
-       <div class="col-12 col-md-10 col-lg-8">
-           <form class="card">
-               <div class="card-body row no-gutters align-items-center">
-                   <div class="col-auto">
-                       <i class="fas fa-search h4 text-body">
-     </i>
-                   </div>
-                   <!--end of col-->
-                   <div class="col">
-                       <input id="myInput" class="form-control form-control-lg form-control-borderless" type="search" placeholder="Search for teachers">
-                   </div>
-                   <!--end of col-->
-               </div>
-           </form>
-       </div>
-       <!--end of col-->
-   </div>
-  </div>
-  </div>
-      
-      <div class="table-responsive">
-            <table summary="User table" class="table table-bordered table-hover">
-           <thead>
-              <tr>
-              <th>ID</th>
-              <th>Username</th>
-              <th>Email</th>
-        		  <th>Last seen</th>
-        		  <th>Registered</th>
-        		  <th>Email Confirmed</th>
-        		  <th>Actions</th>
-            </tr>
-          </thead>
-		  <tbody id="searchableTable">
-			{% for user in teacher_info %}
-            <tr>
-              <td>{{user.id}}</td>
-              <td>{{user.username}}</td>
-              <td>{{user.email}}</td>
-              <td>{{user.last_seen.strftime('%d %b %H:%M:%S')}}</td>
-              <td>{{user.registered.strftime('%d %b %H:%M:%S')}}</td>
-              {% if user.email_confirmed==True %}
-               <td><button class="btn btn-sm btn-secondary"><i class="fa fa-check-circle"></i></button></td>
+
+    <div class="table-responsive">
+      <table summary="User table" class="table table-bordered table-hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Last seen</th>
+            <th>Registered</th>
+            <th>Email Confirmed</th>
+            <th>Superintendant</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="searchableTable">
+          {% for user in teacher_info %}
+          <tr>
+            <td>{{user.id}}</td>
+            <td>{{user.username}}</td>
+            <td>{{user.email}}</td>
+            <td>{{user.last_seen.strftime('%d %b %H:%M:%S')}}</td>
+            <td>{{user.registered.strftime('%d %b %H:%M:%S')}}</td>
+            {% if user.email_confirmed==True %}
+            <td><button class="btn btn-sm btn-success"><i class="fa fa-check-circle"></i></button></td>
+            {% else %}
+            <td><button class="btn btn-sm btn-warning"><i class="fa fa-times-circle"></i></button></td>
+            {% endif %}
+            <td>{% if user.is_superintendant %}
+              <button class="btn btn-sm btn-success"><i class="fa fa-check-circle"></i></button>
+                {% else %}
+              <button class="btn btn-sm btn-light"><i class="fa fa-times-circle"></i>
+                {% endif %}
+            </td>
+            <td>
+              <p><a href="{{url_for('user.edit_user', user_id = user.id)}}" class="btn btn-block btn-primary btn-sm"
+                  role="button"><i class="fa fa-user-edit"></i> Edit </a></p>
+
+              {% if user.is_admin==True %}
+              <a href="{{url_for('user.remove_admin_rights', user_id = user.id)}}"
+                class="btn btn-block btn-danger btn-sm" role="button"><i class="fa fa-user-slash"></i> Remove admin</a>
               {% else %}
-               <td><button class="btn btn-sm btn-warning"><i class="fa fa-times-circle"></i></button></td>
+              <a href="{{url_for('user.give_admin_rights', user_id = user.id)}}"
+                class="btn btn-block btn-warning btn-sm" role="button"><i class="fa fa-user-tie"></i> Add admin</a>
               {% endif %}
-              <td>
-               <p><a href="{{url_for('user.edit_user', user_id = user.id)}}" class="btn btn-block btn-primary btn-sm" role="button"><i class="fa fa-user-edit"></i> Edit user</a></p>
-               
-                {% if user.is_admin==True %}
-               <a href="{{url_for('user.remove_admin_rights', user_id = user.id)}}" class="btn btn-block btn-danger btn-sm" role="button"><i class="fa fa-user-slash"></i> Remove admin</a>
-              {% else %}
-               <a href="{{url_for('user.give_admin_rights', user_id = user.id)}}" class="btn btn-block btn-warning btn-sm" role="button"><i class="fa fa-user-tie"></i> Add admin</a>
-              {% endif %}
-              </td>
-            </tr>
-           {% endfor %}
-          </tbody>
-          <tfoot>
-            <tr>
-            </tr>
-          </tfoot>
-        </table>
-      </div><!--end of .table-responsive-->
-      
- 
- 
-</div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot>
+          <tr>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    <!--end of .table-responsive-->
+
+
+
+  </div>
 </div>
 {% endblock %}
 </div>
