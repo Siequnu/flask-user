@@ -401,13 +401,32 @@ def remove_admin_rights(user_id):
 
 
 # Admin can register a new user
-@bp.route('/register_admin', methods=['GET', 'POST'])
+@bp.route('/register/admin', methods=['GET', 'POST'])
 @login_required
 def register_admin():
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
 		form = forms.AdminRegistrationForm()
+		
+		if current_user.is_superintendant:
+			form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
+		else:
+			form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in app.classes.models.get_teacher_classes_from_teacher_id (current_user.id)]
+		
+		if current_user.is_superintendant is not True: del form.is_superintendant
+
 		if form.validate_on_submit():
-			user = User(username=form.username.data, email=form.email.data, is_admin=True, registered=datetime.now())
+			if current_user.is_superintendant is not True: 
+				is_superintendant = False
+			else:
+				is_superintendant = form.is_superintendant.data
+			
+			user = User(
+				username=form.username.data, 
+				email=form.email.data, 
+				is_admin = True, 
+				registered=datetime.now(),
+				is_superintendant=is_superintendant
+			)
 			db.session.add(user)
 			db.session.commit()
 			

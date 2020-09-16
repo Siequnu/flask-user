@@ -63,8 +63,10 @@ class BatchStudentImportForm(FlaskForm):
 	submit = SubmitField('Process...')
 	
 class AdminRegistrationForm(FlaskForm):
-	username = StringField('Username', validators=[DataRequired()])
-	email = StringField('Email', validators=[DataRequired(), Email()])
+	is_superintendant = BooleanField('Superintendant user', default=False)
+	username = StringField('Username:', validators=[DataRequired()])
+	email = StringField('Email:', validators=[DataRequired(), Email()])
+	target_turmas = SelectMultipleField('For classes:', coerce=int)
 	submit = SubmitField('Register')
 
 	def validate_username(self, username):
