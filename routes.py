@@ -466,7 +466,6 @@ def register_admin():
 			db.session.commit()
 
 			# Register the teacher as being part of whatever classes were selected
-			print (form.target_turmas.data)
 			for turma_id in form.target_turmas.data:
 				app.classes.models.add_teacher_to_class (user.id, turma_id)
 			
