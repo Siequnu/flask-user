@@ -464,6 +464,11 @@ def register_admin():
 			)
 			db.session.add(user)
 			db.session.commit()
+
+			# Register the teacher as being part of whatever classes were selected
+			print (form.target_turmas.data)
+			for turma_id in form.target_turmas.data:
+				app.classes.models.add_teacher_to_class (user.id, turma_id)
 			
 			# Send the email confirmation link, with link to set a password
 			subject = current_app.config['APP_NAME'] + " - your account is almost ready"
