@@ -370,6 +370,64 @@ def manage_teachers():
 	abort(403)
 	
 
+
+# Convert a teacher into a student of one of their classes
+@bp.route('/view/<class_id>')
+@login_required
+def view_as_member_of_class(class_id):
+	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+		try:
+			# Additional security to check if the teacher owns this class? 
+			teacher_manages_this_class = False
+			if current_user.is_superintendant is True:
+				teacher_manages_this_class = True
+			else:
+				for turma in app.classes.models.get_teacher_classes_from_teacher_id (current_user.id):
+					if int(turma.id) == int(class_id):
+						teacher_manages_this_class = True
+
+			if teacher_manages_this_class is False:
+				abort (403)
+
+			# Make the database changes
+			app.models.User.remove_admin_rights(current_user.id)
+			flash('Student view enabled.', 'success')
+
+			user = User.query.get(current_user.id)
+			user.set_can_return_to_admin (True)
+
+			# "Enroll" the teacher in the class
+			app.assignments.models.enroll_user_in_class(user.id, class_id)
+
+		except Exception as e:
+			print (e)
+			flash('An error occured while emabling student view.', 'error')
+		return redirect(url_for('main.index'))
+	else:
+		abort(403)
+
+
+# Convert a teacher into a student of one of their classes
+@bp.route('/view/admin')
+@login_required
+def view_as_admin():
+	if current_user.is_authenticated and current_user.can_return_to_admin is True:
+		try:
+			app.models.User.give_admin_rights(current_user.id)
+
+			app.classes.models.remove_all_enrollment_from_user (current_user.id)
+
+			user = User.query.get(current_user.id)
+			user.set_can_return_to_admin (False)
+			
+			flash('Teacher view enabled.', 'success')
+		except:
+			flash('An error occured while enabling teacher view.', 'error')
+		return redirect(url_for('main.index'))
+	else:
+		abort(403)
+
+
 # Convert normal user into admin
 @bp.route('/give_admin_rights/<user_id>')
 @login_required
