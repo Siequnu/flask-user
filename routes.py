@@ -271,6 +271,19 @@ def reset_with_token(token):
 def edit_user(user_id):
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
 		user = User.query.get(user_id)
+
+		# If not superintendant, can only edit own students
+		if current_user.is_superintendant is not True: # Account for both Null and False
+			
+			# Any "normal" teacher can not edit other teachers, or superintendants
+			if user.is_superintendant is True or user.is_admin is True:
+				flash ("You can not edit other teacher profiles. Please contact an administrator to change other teacher details.", 'warning')
+				return redirect (url_for ('main.index'))
+			
+			# As the user to be edited is not teacher or superintendant, check if they are enrolled in this teacher's class
+			if app.classes.models.check_if_student_is_in_teachers_class(user.id, current_user.id) is False:
+				abort (403)
+
 		form = app.user.forms.EditUserForm(obj=user)
 		form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
 		if form.validate_on_submit():
@@ -285,11 +298,26 @@ def edit_user(user_id):
 			flash('User edited successfully.', 'success')
 			return redirect(url_for('user.manage_students'))
 		return render_template('user/register.html', title='Edit user', form=form)
+	abort (403)
 	
 @bp.route('/delete/<user_id>', methods=['GET', 'POST'])
 def delete_user(user_id):
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
 		user = User.query.get(user_id)
+
+		# If not superintendant, can only edit own students
+		if current_user.is_superintendant is not True: # Account for both Null and False
+			
+			# Any "normal" teacher can not edit other teachers, or superintendants
+			if user.is_superintendant is True or user.is_admin is True:
+				flash ("You can not edit other teacher profiles. Please contact an administrator to change other teacher details.", 'warning')
+				return redirect (url_for ('main.index'))
+			
+			# As the user to be edited is not teacher or superintendant, check if they are enrolled in this teacher's class
+			if app.classes.models.check_if_student_is_in_teachers_class(user.id, current_user.id) is False:
+				abort (403)
+
+
 		form = app.user.forms.ConfirmationForm()
 		confirmation_message = 'Are you sure you want to delete ' + user.username + "'s account?"
 		if form.validate_on_submit():
@@ -315,6 +343,7 @@ def delete_user(user_id):
 							   title='Delete user',
 							   confirmation_message = confirmation_message,
 							   form=form)
+	abort (403)
 
 # Manage Users
 @bp.route('/students/manage')
@@ -364,7 +393,7 @@ def change_registration_code():
 @bp.route('/teachers/manage')
 @login_required
 def manage_teachers():
-	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+	if current_user.is_authenticated and current_user.is_superintendant:
 		teacher_info = app.user.models.get_all_admin_info()
 		return render_template('user/manage_teachers.html', title='Manage teachers', teacher_info = teacher_info)
 	abort(403)
@@ -497,7 +526,7 @@ def strip_of_superintendant(user_id):
 @bp.route('/register/admin', methods=['GET', 'POST'])
 @login_required
 def register_admin():
-	if current_user.is_authenticated and app.models.is_admin(current_user.username):
+	if current_user.is_authenticated and current_user.is_superintendant:
 		form = forms.AdminRegistrationForm()
 		
 		if current_user.is_superintendant:
