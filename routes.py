@@ -267,32 +267,51 @@ def reset_with_token(token):
 	return render_template('user/reset_with_token.html', form=form, token=token)
 
 
+# Route to edit a user
 @bp.route('/edit/<user_id>', methods=['GET', 'POST'])
 def edit_user(user_id):
+	# Only admins (or above) can edit users
 	if current_user.is_authenticated and app.models.is_admin(current_user.username):
-		user = User.query.get(user_id)
+		# Get the user
+		user_to_edit = User.query.get(user_id)
 
 		# If not superintendant, can only edit own students
-		if current_user.is_superintendant is not True: # Account for both Null and False
+		if current_user.is_superintendant is not True: # Account for both Null (i.e. before implementation) and False
 			
 			# Any "normal" teacher can not edit other teachers, or superintendants
-			if user.is_superintendant is True or user.is_admin is True:
+			if user_to_edit.is_superintendant is True or user_to_edit.is_admin is True:
 				flash ("You can not edit other teacher profiles. Please contact an administrator to change other teacher details.", 'warning')
 				return redirect (url_for ('main.index'))
 			
 			# As the user to be edited is not teacher or superintendant, check if they are enrolled in this teacher's class
-			if app.classes.models.check_if_student_is_in_teachers_class(user.id, current_user.id) is False:
+			if app.classes.models.check_if_student_is_in_teachers_class(user_to_edit.id, current_user.id) is False:
 				abort (403)
 
-		form = app.user.forms.EditUserForm(obj=user)
-		form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
+		form = app.user.forms.EditUserForm(obj=user_to_edit)
+		
+		# Populate the current turma choices, for superintendant or for normal user
+		if current_user.is_superintendant:
+			form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in Turma.query.all()]
+		elif current_user.is_admin:
+			form.target_turmas.choices = [(turma.id, turma.turma_label) for turma in app.classes.models.get_teacher_classes_from_teacher_id (current_user.id)]
+
+		# If the user being edited is a teacher, remove the for classes and student number field
+		if user_to_edit.is_admin or user_to_edit.is_superintendant:
+			del form.student_number
+			del form.target_turmas
+
 		if form.validate_on_submit():
-			user.username = form.username.data
-			user.email = form.email.data
-			user.student_number = form.student_number.data
-			app.assignments.models.reset_user_enrollment(user.id)
-			for turma_id in form.target_turmas.data:
-				app.assignments.models.enroll_user_in_class(user.id, turma_id)
+			# Assign form variables to object
+			user_to_edit.username = form.username.data
+			user_to_edit.email = form.email.data
+			
+			# Only assign student number & enrollment if user is a student
+			if user_to_edit.is_superintendant is not True and user_to_edit.is_admin is not True:
+				user_to_edit.student_number = form.student_number.data
+			
+				app.assignments.models.reset_user_enrollment(user_to_edit.id)
+				for turma_id in form.target_turmas.data:
+					app.assignments.models.enroll_user_in_class(user_to_edit.id, turma_id)
 			
 			db.session.commit()
 			flash('User edited successfully.', 'success')
