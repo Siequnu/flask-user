@@ -341,6 +341,9 @@ def delete_user(user_id):
 		confirmation_message = 'Are you sure you want to delete ' + user.username + "'s account?"
 		if form.validate_on_submit():
 			
+			# If user is teacher, remove any class management, but leave the class intact
+			app.classes.models.remove_teacher_from_all_classes (user_id)
+			
 			app.collaboration.models.delete_all_user_pads_and_collabs (user_id)
 			
 			app.classes.models.delete_all_user_absence_justification_uploads(user_id)
