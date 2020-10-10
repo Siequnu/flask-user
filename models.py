@@ -64,7 +64,7 @@ def get_non_enrolled_user_info():
 		all_user_dict.append (user)
 
 	# Subtract enrolled_students from all_users
-	non_enrolled_users = {user for user in all_user_dict if user not in enrolled_students_dict}
+	non_enrolled_users = {user for user in all_user_dict if user not in enrolled_students_dict and user.is_admin is not True}
 	
 	return non_enrolled_users
 
