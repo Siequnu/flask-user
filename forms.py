@@ -47,11 +47,11 @@ class RegistrationForm(FlaskForm):
 				
 class EmailForm(FlaskForm):
 	email = StringField('Email', validators=[DataRequired(), Email()])
-	submit = SubmitField('Request password reset.')
+	submit = SubmitField('Request password reset')
 
 class PasswordForm(FlaskForm):
 	password = PasswordField('Password', validators=[DataRequired()])
-	submit = SubmitField('Reset password.')
+	submit = SubmitField('Reset password')
 	
 class RegistrationCodeChangeForm(FlaskForm):
 	registration_code = StringField('New registration code:', validators=[DataRequired()])
