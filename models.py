@@ -51,7 +51,15 @@ def get_active_user_count ():
 	now = datetime.now()
 	active_cutoff = now - timedelta(minutes=1)
 	return User.query.filter(User.last_seen > active_cutoff).count()
-	
+
+def get_active_user_names ():
+	now = datetime.now()
+	active_cutoff = now - timedelta(minutes=1)
+	users = []
+	for user in User.query.filter(User.last_seen > active_cutoff).all():
+		users.append (user.username)
+	return users
+
 def get_non_enrolled_user_info():
 	enrolled_student_info = get_all_student_info ()
 	enrolled_students_dict = []

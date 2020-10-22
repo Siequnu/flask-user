@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, session, flash, request, abort, current_app
+from flask import render_template, redirect, url_for, session, flash, request, abort, current_app, jsonify
 import datetime
 
 from flask_login import current_user, login_user, login_required, logout_user
@@ -17,6 +17,15 @@ from datetime import datetime
 from app import executor
 
 from time import sleep
+
+
+# Superintendant API route to get currently active users
+@bp.route("/api/users/active")
+@login_required
+def get_active_users():
+	if current_user.is_superintendant:
+		return jsonify({'active_users': app.user.models.get_active_user_names ()})
+	abort(403)
 
 # Log-in page
 @bp.route('/login', methods=['GET', 'POST'])
