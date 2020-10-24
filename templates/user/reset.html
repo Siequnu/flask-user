@@ -4,27 +4,25 @@
 
 {% block app_content %}
 <div class="container">
-<br>
 
-{% block body %}
+  {% block body %}
 
- <div class="container">
 
- <div class="card bg-light mb-3" style="max-width: 25rem;">
-  <div class="card-body">
-    <h1>Reset password</h1>
-    <hr>
-    <br>
-    <h6>Please enter your email address to reset your password.</h6>
-    <br>
-    <form method="post">
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-      {{ render_form(form) }}
-    </form>
+
+  <div class="card bg-light mb-3" style="max-width: 25rem;">
+    <div class="card-body">
+      <h1>Reset password</h1>
+      <hr>
       <br>
+      <h6>Please enter your email address to reset your password.</h6>
+      <br>
+      <form method="post">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        {{ render_form(form) }}
+      </form>
+      <br>
+    </div>
   </div>
-  </div>
-</div>
 
 </div>
 {% endblock %}
