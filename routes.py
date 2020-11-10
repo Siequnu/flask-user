@@ -230,7 +230,7 @@ def send_new_confirmation_email(user_id):
 @bp.route('/confirm/<token>')
 def confirm_email(token):
 	try:
-		email = app.email_model.ts.loads(token, salt=current_app.config["TS_SALT"], max_age=86400)
+		email = app.email_model.ts.loads(token, salt=current_app.config["TS_SALT"], max_age=current_app.config['TS_MAX_AGE'])
 	except:
 		abort(404)
 	user = User.query.filter_by(email=email).first_or_404()
