@@ -48,13 +48,7 @@ def login():
 
 		# If the user somehow has no password, due to registration issues, send a link
 		if user.password_hash is None or user.password_hash == '':
-			subject = "Password reset requested"
-			token = app.email_model.ts.dumps(user.email, salt=current_app.config["TS_RECOVER_SALT"])
-
-			recover_url = url_for('user.reset_with_token', token=token, _external=True)
-			html = render_template('email/recover.html', recover_url=recover_url, username = user.username, app_name = current_app.config['APP_NAME'])
-			
-			executor.submit(app.email_model.send_email, user.email, subject, html)
+			send_password_reset_email (user.username, user.email)
 			flash('You must set a password before you continue. An email has been sent to your inbox with a link to recover your password.', 'info')
 			return redirect(url_for('main.index'))
 		
@@ -248,6 +242,7 @@ def send_new_confirmation_email(user_id):
 		return redirect(url_for('user.manage_students'))
 	abort(403)
 
+
 # Confirm email
 @bp.route('/confirm/<token>')
 def confirm_email(token):
@@ -261,23 +256,30 @@ def confirm_email(token):
 	flash('Your email has been confirmed. Please log-in now.', 'success')
 	return redirect(url_for('user.login'))
 
+
 # Reset password form
 @bp.route('/reset', methods=["GET", "POST"])
 def reset():
 	form = app.user.forms.EmailForm()
 	if form.validate_on_submit():
 		user = User.query.filter_by(email=form.email.data).first_or_404()
-		subject = "Password reset requested"
-		token = app.email_model.ts.dumps(user.email, salt=current_app.config["TS_RECOVER_SALT"])
-
-		recover_url = url_for('user.reset_with_token', token=token, _external=True)
-		html = render_template('email/recover.html', recover_url=recover_url, username = user.username, app_name = current_app.config['APP_NAME'])
-		
-		executor.submit(app.email_model.send_email, user.email, subject, html)
+		send_password_reset_email (user.username, user.email)
 		flash('An email has been sent to your inbox with a link to recover your password.', 'info')
 		return redirect(url_for('main.index'))
 		
 	return render_template('user/reset.html', form=form)
+
+
+# Helper method to send a password reset email
+def send_password_reset_email (username, email):
+	subject = "Password reset requested"
+	token = app.email_model.ts.dumps(email, salt=current_app.config["TS_RECOVER_SALT"])
+
+	recover_url = url_for('user.reset_with_token', token=token, _external=True)
+	html = render_template('email/recover.html', recover_url=recover_url, username = username, app_name = current_app.config['APP_NAME'])
+	
+	executor.submit(app.email_model.send_email, email, subject, html)
+
 
 # Reset password with token
 # This also confirms the email address
