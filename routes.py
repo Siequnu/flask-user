@@ -35,13 +35,35 @@ def login():
 	form = app.user.forms.LoginForm()
 	if form.validate_on_submit():
 		user = User.query.filter_by(username=form.username.data).first()
-		if user is None or not user.check_password(form.password.data):
+		
+		# If this user isn't registered
+		if user is None:
 			flash('Invalid username or password', 'error')
 			return redirect(url_for('user.login'))
+
 		# Check for email validation
 		if User.user_email_is_confirmed(user.username) == False:
 			flash('Please click the confirmation link in the email that was sent to you.', 'warning')
-			return redirect(url_for('user.login'))		
+			return redirect(url_for('user.login'))	
+
+		# If the user somehow has no password, due to registration issues, send a link
+		if user.password_hash is None or user.password_hash == '':
+			subject = "Password reset requested"
+			token = app.email_model.ts.dumps(user.email, salt=current_app.config["TS_RECOVER_SALT"])
+
+			recover_url = url_for('user.reset_with_token', token=token, _external=True)
+			html = render_template('email/recover.html', recover_url=recover_url, username = user.username, app_name = current_app.config['APP_NAME'])
+			
+			executor.submit(app.email_model.send_email, user.email, subject, html)
+			flash('You must set a password before you continue. An email has been sent to your inbox with a link to recover your password.', 'info')
+			return redirect(url_for('main.index'))
+		
+		# If this is the wrong password
+		if not user.check_password(form.password.data):
+			flash('Invalid username or password', 'error')
+			return redirect(url_for('user.login'))
+
+		# All checks passed, log-in user
 		login_user(user, remember=form.remember_me.data)
 		next_page = request.args.get('next')
 		if not next_page or url_parse(next_page).netloc != '':
