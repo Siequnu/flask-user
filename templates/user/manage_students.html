@@ -46,9 +46,10 @@
   <br>
   <h3>Students in your classes</h3>
   <br>
-  <div class="table-responsive">
+  <link rel="stylesheet" href="/static/css/no-more-tables.css">
+  <div class="table-responsive no-more-tables">
     <table id="dtBasicExample" summary="User table"
-      class="table table-striped table-bordered table-sm table-hover text-small" cellspacing="0" width="100%">
+      class="table table-responsive table-striped table-bordered table-hover table-sm" cellspacing="0" width="100%">
       <thead>
         <tr>
           <th><i class="fa fa-id-card-alt"></i></th>
@@ -56,7 +57,10 @@
           <th><i class="fa fa-at"></i></th>
           <th><i class="fa fa-university"></i></th>
           <th><i class="fa fa-eye"></i></th>
+          {% set mentors = custom_service_is_enabled ('mentors') %}
+          {% if mentors %}
           <th><i class="fa fa-user-plus"></i></th>
+          {% endif %}
           <th><i class="fa fa-envelope-open-text"></i></th>
           <th><i class="fa fa-user-cog"></i></th>
           <th><i class="fa fa-tools"></i></th>
@@ -65,8 +69,8 @@
       <tbody id="searchableTable">
         {% for user, enrollment_info in student_info %}
         <tr>
-          <td>{{user.student_number}}</td>
-          <td>{{user.username}}</td>
+          <td><strong>{{user.student_number}}</strong></td>
+          <td><strong>{{user.username}}</strong></td>
           <td>{{user.email}}</td>
           <td>{{enrollment_info}}</td>
           <td>{{user.last_seen.strftime('%d %b %H:%M:%S')}}</td>
@@ -80,12 +84,13 @@
           </td>
           {% endif %}
 
-
+          {% if mentors %}
           <td><a href="{{url_for('mentors.view_mentors', student_id = user.id)}}" class="btn btn-outline-primary btn-sm"
               role="button"><i class="fa fa-chalkboard-teacher"></i> View
               mentors</a></td>
-
-          <td>
+          
+          {% endif %}
+              <td>
 
             <div class="dropdown show">
               <a class="btn btn-sm btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink"
