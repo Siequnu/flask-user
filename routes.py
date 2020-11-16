@@ -388,6 +388,9 @@ def delete_user(user_id):
 			app.assignments.models.delete_all_grades_from_user_id (user_id)
 			
 			app.files.models.delete_uploads_enrollments_and_download_records_for_user(user_id)
+
+			if app.models.custom_service_is_enabled('consultations'):
+				app.consultations.models.delete_all_consultations_associated_to_user(user_id)
 			
 			app.models.User.delete_user(user_id)
 			
