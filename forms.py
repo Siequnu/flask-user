@@ -13,7 +13,7 @@ class LoginForm(FlaskForm):
 
 class EditUserForm (FlaskForm):
 	username = StringField('Username', validators=[DataRequired()])
-	email = StringField('Email', validators=[DataRequired(), Email()])
+	email = StringField('Email', validators=[DataRequired()])
 	student_number = StringField('Student number', validators=[DataRequired()])
 	target_turmas = SelectMultipleField('For classes', coerce=int, validators=[DataRequired()])
 	submit = SubmitField('Edit user')
