@@ -262,7 +262,10 @@ def confirm_email(token):
 def reset():
 	form = app.user.forms.EmailForm()
 	if form.validate_on_submit():
-		user = User.query.filter_by(email=form.email.data).first_or_404()
+		user = User.query.filter_by(email=form.email.data).first()
+		if user is None:
+			flash('Could not find any account associated with your email.', 'error')
+			return redirect (url_for ('main.index'))
 		send_password_reset_email (user.username, user.email)
 		flash('An email has been sent to your inbox with a link to recover your password.', 'info')
 		return redirect(url_for('main.index'))
